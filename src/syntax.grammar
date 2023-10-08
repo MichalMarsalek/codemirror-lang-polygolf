@@ -1,26 +1,104 @@
-@top Program { expression* }
+@top Program { Variant }
 
 @skip { space | LineComment }
 
-expression {
-  Identifier |
+variant_child {
+  expr ";" |
+  Stmt
+}
+variant_last_child {
+  expr ";"? |
+  Stmt
+}
+
+Variant {
+  variant_child* variant_last_child
+}
+
+Variants {
+  "{" (Variant "/")* Variant "}"
+}
+
+expr {
+  expr_inner (":" type_expr)? |
+  Variants
+}
+
+expr_inner {
+  Integer |
   String |
-  Boolean |
-  Application { "(" expression* ")" }
+  Variable |
+  Nullary |
+  Sexpr
+}
+
+Sexpr {
+  "(" callee expr* ")" |
+  "(" expr Opalias expr ")"
+}
+
+Stmt {
+  callee expr+ ";" |
+  expr Opalias expr ";"
+}
+
+callee {
+  Builtin |
+  Opalias |
+  Variable
+}
+
+type_expr {
+  type_range |
+  Type_name |
+  type_sexpr
+}
+
+Opalias {
+  Opalias_raw | ".." | @specialize<Builtin, "mod" | "rem" | "div" | "trunc_div">
+}
+
+Nullary {
+  @specialize<Builtin, "argv" | "argc" | "true" | "false">
+}
+
+type_range {
+  ("-oo" | Integer) ".." ("oo" | Integer)
+}
+
+type_sexpr {
+  "(" Type_name (type_expr | Integer)+ ")"
 }
 
 @tokens {
-  Identifier { $[a-zA-Z_\-0-9]+ }
+  Integer {
+    "0" |
+    (
+      "-"? $[1-9] $[0-9]* ($[eE] $[1-9] $[0-9]*)?
+    ) |
+    (
+      "-"? "0x" $[1-9a-fA-F] $[0-9a-fA-F]*
+    ) |
+    (
+      "-"? "0b1" $[01]*
+    )
+  }
 
   String { '"' (!["\\] | "\\" _)* '"' }
 
-  Boolean { "#t" | "#f" }
+  Variable {"$" $[a-zA-Z_]+}
 
-  LineComment { ";" ![\n]* }
+  Type_name {$[A-Z] $[a-z]*}
 
-  space { $[ \t\n\r]+ }
+  Opalias_raw {"<-" | "+" | "-" | "*" | "^" | "&" | "|" | "~" | ">>" | "<<" | "==" | "!=" | "<=" | "<" | ">=" | ">" | "=>" | "#"}
 
-  "(" ")"
+  Builtin {$[a-z_] $[a-z0-9_]*}
+
+  LineComment { "%" ![\n]* }
+
+  space { @whitespace+ }
+
+  @precedence { Integer, Opalias_raw }
 }
 
 @detectDelim

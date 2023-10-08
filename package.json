@@ -1,7 +1,7 @@
 {
-  "name": "codemirror-lang-EXAMPLE",
+  "name": "codemirror-lang-polygolf",
   "version": "0.1.0",
-  "description": "EXAMPLE language support for CodeMirror",
+  "description": "Polygolf language support for CodeMirror",
   "scripts": {
     "test": "mocha test/test.js",
     "prepare": "rollup -c"
@@ -17,6 +17,7 @@
   "sideEffects": false,
   "dependencies": {
     "@codemirror/language": "^6.0.0",
+    "@codemirror/autocomplete": "^6.0.0",
     "@lezer/highlight": "^1.0.0",
     "@lezer/lr": "^1.0.0"
   },
