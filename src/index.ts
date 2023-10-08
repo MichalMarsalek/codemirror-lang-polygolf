@@ -88,10 +88,14 @@ const opcodes = [
   "sorted",
 ];
 
-const opaliases =
-  "<- + - * ^ & | ~ >> << == != <= < >= > => # mod rem div trunc_div".split(
-    " "
-  );
+const words = (x: string) => x.split(" ");
+
+const opaliases = words(
+  "<- + - * ^ & | ~ >> << == != <= < >= > => # .. mod rem div trunc_div"
+);
+
+const nullaryTypes = words("Void Bool Int Text Ascii");
+const sexprTypes = words("Text Ascii List Array Table Set Func");
 
 function autocomplete(context: CompletionContext) {
   let word = context.matchBefore(/\w*/)!;
