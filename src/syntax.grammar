@@ -1,6 +1,10 @@
-@top Program { Variant }
+@top Program { variant }
 
 @skip { space | LineComment }
+
+Variant {
+  variant
+}
 
 variant_child {
   expr ";" |
@@ -11,7 +15,7 @@ variant_last_child {
   Stmt
 }
 
-Variant {
+variant {
   variant_child* variant_last_child
 }
 
@@ -20,7 +24,8 @@ Variants {
 }
 
 expr {
-  expr_inner (":" type_expr)? |
+  expr_inner |
+  Annotation { expr_inner ":" type } |
   Variants
 }
 
@@ -48,26 +53,26 @@ callee {
   Variable
 }
 
-type_expr {
-  type_range |
+type {
+  Range |
   Type_name |
-  type_sexpr
+  Type_sexpr
 }
 
 Opalias {
-  Opalias_raw | ".." | @specialize<Builtin, "mod" | "rem" | "div" | "trunc_div">
+  opsymbol | @specialize<Builtin, "mod" | "rem" | "div" | "trunc_div">
 }
 
 Nullary {
   @specialize<Builtin, "argv" | "argc" | "true" | "false">
 }
 
-type_range {
+Range {
   ("-oo" | Integer) ".." ("oo" | Integer)
 }
 
-type_sexpr {
-  "(" Type_name (type_expr | Integer)+ ")"
+Type_sexpr {
+  "(" Type_name (type | Integer)+ ")"
 }
 
 @tokens {
@@ -90,7 +95,7 @@ type_sexpr {
 
   Type_name {$[A-Z] $[a-z]*}
 
-  Opalias_raw {"<-" | "+" | "-" | "*" | "^" | "&" | "|" | "~" | ">>" | "<<" | "==" | "!=" | "<=" | "<" | ">=" | ">" | "=>" | "#"}
+  opsymbol {"<-" | "+" | "-" | "*" | "^" | "&" | "|" | "~" | ">>" | "<<" | "==" | "!=" | "<=" | "<" | ">=" | ">" | "=>" | "#" | ".."}
 
   Builtin {$[a-z_] $[a-z0-9_]*}
 
@@ -98,7 +103,11 @@ type_sexpr {
 
   space { @whitespace+ }
 
-  @precedence { Integer, Opalias_raw }
+  "oo"
+
+  "-oo"
+
+  @precedence { Integer, opsymbol }
 }
 
 @detectDelim

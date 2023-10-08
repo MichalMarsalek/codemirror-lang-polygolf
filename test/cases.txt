@@ -1,41 +1,113 @@
-# Booleans
+# Literals
 
-#t
-#f
-
-==>
-
-Program(Boolean, Boolean)
-
-# Identifiers
-
-one
-Two_Three
+5;
+-123;
+1e6;
+-0b100110;
+-0xabcdef;
+$y;
+"abc"
 
 ==>
 
-Program(Identifier, Identifier)
+Program(
+  Integer,
+  Integer,
+  Integer,
+  Integer,
+  Integer,
+  Variable,
+  String
+)
 
-# Strings
+# S-expressions
 
-"hello"
-"one\"\\two"
+$x <- true;
+$x <- argv;
+$x <- ($f 1 2);
+$x <- ($f $x $y);
+$x <- (add $x $y);
+$x <- ($x + $y);
+$x <- (or $x $y);
+$x <- (+ $x $y $z $w);
+$x <- (- $x);
+$x <- (- $x $y);
+$x <- (~ $x);
 
 ==>
 
-Program(String, String)
+Program(
+  Stmt(Variable,Opalias,Nullary),
+  Stmt(Variable,Opalias,Nullary),
+  Stmt(Variable,Opalias,Sexpr(Variable,Integer,Integer)),
+  Stmt(Variable,Opalias,Sexpr(Variable,Variable,Variable)),
+  Stmt(Variable,Opalias,Sexpr(Builtin,Variable,Variable)),
+  Stmt(Variable,Opalias,Sexpr(Variable,Opalias,Variable)),
+  Stmt(Variable,Opalias,Sexpr(Builtin,Variable,Variable)),
+  Stmt(Variable,Opalias,Sexpr(Opalias,Variable,Variable,Variable,Variable)),
+  Stmt(Variable,Opalias,Sexpr(Opalias,Variable)),
+  Stmt(Variable,Opalias,Sexpr(Opalias,Variable,Variable)),
+  Stmt(Variable,Opalias,Sexpr(Opalias,Variable))
+)
 
-# Applications
+# Type annotations
 
-(begin
-  (when #t
-    (print (concat "hello" " " "world")))
-  (print "DONE"))
+$x:-oo..oo;
+$x:0..oo;
+$x:-10..10;
+$x:Bool;
+$x:(Text 120);
+$x:(Ascii 40..120);
+$x:(List (List Text))
 
 ==>
 
-Program(Application(
-  Identifier,
-  Application(Identifier, Boolean, Application(
-    Identifier, Application(Identifier, String, String, String)))
-  Application(Identifier, String)))
+Program(
+  Annotation(Variable,Range("-oo",oo)),
+  Annotation(Variable,Range(Integer,oo)),
+  Annotation(Variable,Range(Integer,Integer)),
+  Annotation(Variable,Type_name),
+  Annotation(Variable,Type_sexpr(Type_name,Integer)),
+  Annotation(Variable,Type_sexpr(Type_name,Range(Integer,Integer))),
+  Annotation(Variable,Type_sexpr(Type_name,Type_sexpr(Type_name,Type_name)))
+)
+
+# Statements
+
+%one
+println 58;%two
+%println -3;
+for $x 1 20 1 (println $x);
+
+==>
+
+Program(
+  LineComment,
+  Stmt(Builtin,Integer),
+  LineComment,
+  LineComment,
+  Stmt(Builtin,Variable,Integer,Integer,Integer,Sexpr(Builtin,Variable))
+)
+
+# Variants
+
+{ $x };
+{ println $x; / print $x; print "\\n"; };
+{ println $x; / print $x; print "\\n"; / print $x; print "\\n"; };
+println { 0 / 1 };
+
+==>
+
+Program(
+  Variants(Variant(Variable)),
+  Variants(
+    Variant(Stmt(Builtin,Variable)),
+    Variant(Stmt(Builtin,Variable),Stmt(Builtin,String))
+  ),
+  Variants(
+    Variant(Stmt(Builtin,Variable)),
+    Variant(Stmt(Builtin,Variable),Stmt(Builtin,String)),
+    Variant(Stmt(Builtin,Variable),Stmt(Builtin,String))
+  ),
+  Stmt(Builtin,Variants(Variant(Integer),Variant(Integer)))
+)
