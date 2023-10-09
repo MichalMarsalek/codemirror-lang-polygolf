@@ -2,6 +2,10 @@
   "name": "codemirror-lang-polygolf",
   "version": "0.1.0",
   "description": "Polygolf language support for CodeMirror",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MichalMarsalek/codemirror-lang-polygolf.git"
+  },
   "scripts": {
     "test": "mocha test/test.js",
     "prepare": "rollup -c"
