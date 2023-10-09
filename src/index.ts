@@ -6,6 +6,7 @@ import {
   foldNodeProp,
   foldInside,
   delimitedIndent,
+  syntaxTree,
 } from "@codemirror/language";
 import { styleTags, tags as t } from "@lezer/highlight";
 import { CompletionContext } from "@codemirror/autocomplete";
@@ -88,21 +89,100 @@ const opcodes = [
   "sorted",
 ];
 
+const special_exprs = [
+  "func",
+  "array",
+  "list",
+  "set",
+  "table",
+  "conditional",
+  "unsafe_conditional",
+  "while",
+  "for",
+  "for_argv",
+  "if",
+  "any_int",
+];
+
 const words = (x: string) => x.split(" ");
 
 const opaliases = words(
   "<- + - * ^ & | ~ >> << == != <= < >= > => # .. mod rem div trunc_div"
 );
 
-const nullaryTypes = words("Void Bool Int Text Ascii");
+const nullaryTypes = words("Void Bool Int 0..oo Text Ascii");
 const sexprTypes = words("Text Ascii List Array Table Set Func");
 
+function getVariableNames(context: CompletionContext, currentFrom: number) {
+  const tree = syntaxTree(context.state);
+  const result: string[] = [];
+  tree.iterate({
+    enter(node) {
+      if (node.name === "Variable" && currentFrom !== node.from)
+        result.push(context.state.sliceDoc(node.from, node.to));
+    },
+  });
+  return result;
+}
+
+interface SyntaxNode {
+  parent: SyntaxNode | null;
+  name: string;
+}
+
+function isTypeNode(node: SyntaxNode | null): boolean {
+  return (
+    node !== null && (node.name === "Type_sexpr" || isTypeNode(node.parent))
+  );
+}
+
+function isTypeContext(context: CompletionContext) {
+  return isTypeNode(syntaxTree(context.state).resolveInner(context.pos, -1));
+}
+
 function autocomplete(context: CompletionContext) {
+  const typeOptions = nullaryTypes
+    .map((label) => ({ label, type: "type", boost: 1 }))
+    .concat(
+      sexprTypes.map((label) => ({
+        label: "(" + label,
+        type: "type",
+        boost: 0,
+      }))
+    );
+  const keywordOptions = opcodes
+    .concat(special_exprs)
+    .map((label) => ({ label, type: "keyword" }));
+
+  const varMatch = context.matchBefore(/\$\w*/);
+  if (varMatch) {
+    return {
+      from: varMatch.from,
+      options: getVariableNames(context, varMatch.from).map((label) => ({
+        label,
+        type: "variable",
+      })),
+    };
+  }
+  const annotationMatch = context.matchBefore(/: ?\(?\w*/);
+  if (annotationMatch) {
+    return {
+      from: context.matchBefore(/\(?\w*/)!.from,
+      options: typeOptions,
+    };
+  }
   let word = context.matchBefore(/\w*/)!;
-  if (word.from == word.to && !context.explicit) return null;
+  if (
+    word !== null &&
+    word.from == word.to &&
+    context.matchBefore(/\(/)?.text !== "(" &&
+    !isTypeContext(context) &&
+    !context.explicit
+  )
+    return null;
   return {
     from: word.from,
-    options: opcodes.map((label) => ({ label, type: "keyword" })),
+    options: isTypeContext(context) ? typeOptions : keywordOptions,
   };
 }
 
@@ -110,15 +190,19 @@ export const PolygolfLanguage = LRLanguage.define({
   parser: parser.configure({
     props: [
       indentNodeProp.add({
-        Application: delimitedIndent({ closing: ")", align: false }),
+        Variants: delimitedIndent({ closing: "}", align: false }),
       }),
       foldNodeProp.add({
-        Application: foldInside,
+        Variants: foldInside,
       }),
       styleTags({
-        Identifier: t.variableName,
-        Boolean: t.bool,
+        Variable: t.variableName,
         String: t.string,
+        Builtin: t.keyword,
+        Nullary: t.constant(t.keyword),
+        Opalias: t.operator,
+        Type_name: t.typeName,
+        Integer: t.integer,
         LineComment: t.lineComment,
         "( )": t.paren,
       }),
@@ -129,6 +213,6 @@ export const PolygolfLanguage = LRLanguage.define({
     autocomplete,
   },
 });
-export function Polygolf() {
+export function polygolf() {
   return new LanguageSupport(PolygolfLanguage);
 }

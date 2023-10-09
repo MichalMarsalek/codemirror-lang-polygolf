@@ -91,7 +91,7 @@ Type_sexpr {
 
   String { '"' (!["\\] | "\\" _)* '"' }
 
-  Variable {"$" $[a-zA-Z_]+}
+  Variable {"$" $[a-zA-Z_]*}
 
   Type_name {$[A-Z] $[a-z]*}
 
