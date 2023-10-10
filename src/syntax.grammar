@@ -107,6 +107,10 @@ Type_sexpr {
 
   "-oo"
 
+  "{"
+
+  "}"
+
   @precedence { Integer, opsymbol }
 }
 
