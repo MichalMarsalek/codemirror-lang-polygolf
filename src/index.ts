@@ -11,7 +11,7 @@ import {
 import { styleTags, tags as t } from "@lezer/highlight";
 import { CompletionContext } from "@codemirror/autocomplete";
 
-// https://github.com/jared-hughes/polygolf/blob/main/src/IR/opcodes.ts
+// https://github.com/polygolf-lang/polygolf/blob/main/src/IR/opcodes.ts
 const opcodes = [
   "add",
   "sub",
@@ -76,6 +76,7 @@ const opcodes = [
   "text_codepoint_reversed", // Returns a text containing the reversed order of codepoints.
   "text_byte_to_int",
   "codepoint_to_int",
+  "read_line",
   "true",
   "false",
   "print",
@@ -87,6 +88,7 @@ const opcodes = [
   "list_set",
   "table_set",
   "sorted",
+  "argv_get",
 ];
 
 const special_exprs = [
