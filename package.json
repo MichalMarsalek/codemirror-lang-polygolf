@@ -1,6 +1,6 @@
 {
   "name": "codemirror-lang-polygolf",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Polygolf language support for CodeMirror",
   "repository": {
     "type": "git",
